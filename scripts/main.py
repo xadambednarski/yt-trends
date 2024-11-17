@@ -116,9 +116,8 @@ def main_channels():
     top_channels_usa = scrape_top_channels("united-states", path=top_usa_path)
 
     yt_api = YoutubeAPI()
-
     top_channels_pl = update_channels_info(yt_api, top_channels_pl)
-    top_channels_usa = update_channels_info(yt_api, top_channels_usa, range=(997, 1000))
+    top_channels_usa = update_channels_info(yt_api, top_channels_usa)
 
     save_channels("poland", channels=top_channels_pl, path=top_poland_path)
     save_channels("usa", top_channels_usa, path=top_usa_path)
