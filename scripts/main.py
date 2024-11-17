@@ -108,7 +108,7 @@ def save_channels(country, channels, path=None) -> None:
                 json.dump(channels, f, ensure_ascii=False, indent=4)
 
 
-def main():
+def main_channels():
     top_poland_path = "data/top_1000_poland.json"
     top_usa_path = "data/top_1000_united-states.json"
 
@@ -125,4 +125,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    main_channels()

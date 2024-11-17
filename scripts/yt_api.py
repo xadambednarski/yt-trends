@@ -141,7 +141,11 @@ class YoutubeAPI:
         Retrieves the last {num_videos} videos from a channel
         """
         request = self.youtube.search().list(
-            part="snippet", channelId=channel_id, maxResults=num_videos, order="date", type="video"
+            part="snippet",
+            channelId=channel_id,
+            maxResults=num_videos,
+            order="date",
+            type="video",
         )
         response = request.execute()
         return response
