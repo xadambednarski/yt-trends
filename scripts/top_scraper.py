@@ -13,19 +13,15 @@ class Channel:
         self,
         name,
         rank,
-        url=None,
-        category=None,
+        id=None,
         thumbnail=None,
         description=None,
-        region_code=None,
     ):
         self.name = name
-        self.category = category
         self.rank = rank
-        self.url = url
+        self.id = id
         self.thumbnail = thumbnail
         self.description = description
-        self.region_code = region_code
 
 
 class Scraper:
@@ -43,6 +39,5 @@ class Scraper:
             cells = row.find_elements(by=By.TAG_NAME, value="td")
             rank = int(cells[0].text)
             name = cells[1].find_element(by=By.TAG_NAME, value="a").text
-            category = cells[5].find_element(by=By.TAG_NAME, value="a").text
-            channel = Channel(name, rank, category=category)
+            channel = Channel(name, rank)
             self.channels.append(channel)

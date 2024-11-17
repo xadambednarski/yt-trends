@@ -42,16 +42,16 @@ class YoutubeAPI:
         )
 
     def get_channel(self, channel_id: str) -> dict[str, Union[str, dict[str, str]]]:
-        request = self.youtube.channels().list(
-            part="snippet,contentDetails,statistics", id=channel_id
-        )
+        request = self.youtube.channels().list(part="snippet", id=channel_id)
         response = request.execute()
         return response
 
     def get_channel_by_name(self, channel_name: str) -> dict[str, Union[str, dict[str, str]]]:
         request = self.youtube.search().list(part="snippet", q=channel_name, type="channel")
         response = request.execute()
-        return response
+        channel_id = response["items"][0]["id"]["channelId"]
+        channel = self.get_channel(channel_id)
+        return channel
 
     def get_playlist(self, playlist_id: str) -> dict[str, Union[str, dict[str, str]]]:
         request = self.youtube.playlistItems().list(
@@ -112,13 +112,6 @@ class YoutubeAPI:
         response = request.execute()
         return response["items"][0]["snippet"]["title"]
 
-    def get_channel_category(self, channel: dict[str, Union[str, dict[str, str]]]) -> str:
-        """
-        Retrieves the category of a channel (e.g. Music, Entertainment, etc.)
-        """
-        category_id = channel["items"][0]["snippet"]["categoryId"]
-        return category_id
-
     def get_video_stats(self, video: dict[str, Union[str, dict[str, str]]]) -> dict[str, int]:
         """
         Retrieves the statistics of a video:
@@ -169,17 +162,6 @@ class YoutubeAPI:
         )
         response = request.execute()
         return response
-
-    def get_youtube_categories(self, region_code: str = "US"):
-        """
-        Retrieves the list of categories available on YouTube
-        """
-        request = self.youtube.videoCategories().list(part="snippet", regionCode=region_code)
-        response = request.execute()
-        categories = {}
-        for item in response["items"]:
-            categories[item["id"]] = item["snippet"]["title"]
-        return categories
 
     def get_channel_thumbnail(
         self,
