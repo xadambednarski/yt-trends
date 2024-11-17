@@ -38,7 +38,7 @@ class YoutubeAPI:
             self.config_file, scopes=scopes
         )
         self.youtube = googleapiclient.discovery.build(
-            api_service_name, api_version, credentials=credentials
+            api_service_name, api_version, credentials=credentials, cache_discovery=False
         )
 
     def get_channel(self, channel_id: str) -> dict[str, Union[str, dict[str, str]]]:
@@ -172,21 +172,13 @@ class YoutubeAPI:
             ThumbnailSize.MEDIUM,
             ThumbnailSize.HIGH,
             ThumbnailSize.MAXRES,
-        ] = ThumbnailSize.DEFAULT,
-        getsize: bool = False,
+        ] = ThumbnailSize.DEFAULT
     ) -> str:
         """
         Retrieves the thumbnail of a channel
         """
         thumbnail = channel["items"][0]["snippet"]["thumbnails"][resolution.value]
-        try:
-            size = (
-                thumbnail["width"],
-                thumbnail["height"],
-            )
-        except KeyError:
-            size = None
-        return thumbnail["url"], size if getsize else thumbnail["url"], None
+        return thumbnail["url"]
 
 
 def show_thumbnail_from_url(url: str) -> None:

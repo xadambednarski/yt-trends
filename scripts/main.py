@@ -21,9 +21,9 @@ TOP_1000_COUNTRY = (
 
 
 def update_channels_info(api: YoutubeAPI, channels: dict, range=None) -> dict:
-    logging.info("Updating channels info...")
     if not range:
         return channels
+    logging.info("Updating channels info...")
     errors_num = 0
     idx_start = range[0]
     while idx_start < range[1]:
@@ -39,14 +39,14 @@ def update_channels_info(api: YoutubeAPI, channels: dict, range=None) -> dict:
             channels[idx_start]["thumbnail"] = channel_thumbnail
             print(f"Channel {idx_start} updated.")
             idx_start += 1
-        except Exception as e:
+        except Exception:
             if errors_num == 3:
                 logging.info(
                     "Error: too many errors, stopping the process. Please try again later."
                 )
                 return channels
             logging.info(
-                f"Error: retrieving data for channel {channels[idx_start]["name"]} - {e}, retrying..."
+                f"Error: retrieving data for channel {channels[idx_start]["name"]}, retrying..."
             )
             time.sleep(3)
             errors_num += 1
@@ -119,7 +119,7 @@ def main():
     yt_api = YoutubeAPI()
 
     top_channels_pl = update_channels_info(yt_api, top_channels_pl)
-    top_channels_usa = update_channels_info(yt_api, top_channels_usa, range=(500, 550))
+    top_channels_usa = update_channels_info(yt_api, top_channels_usa, range=(699, 1000))
 
     save_channels("poland", channels=top_channels_pl, path=top_poland_path)
     save_channels("usa", top_channels_usa, path=top_usa_path)
