@@ -170,13 +170,16 @@ class YoutubeAPI:
         response = request.execute()
         return response
 
-    def get_youtube_categories(self):
+    def get_youtube_categories(self, region_code: str = "US"):
         """
         Retrieves the list of categories available on YouTube
         """
-        request = self.youtube.videoCategories().list(part="snippet")
+        request = self.youtube.videoCategories().list(part="snippet", regionCode=region_code)
         response = request.execute()
-        return response
+        categories = {}
+        for item in response["items"]:
+            categories[item["id"]] = item["snippet"]["title"]
+        return categories
 
     def get_channel_thumbnail(
         self,

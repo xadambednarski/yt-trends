@@ -19,21 +19,25 @@ TOP_1000_COUNTRY = (
 )
 
 
-def update_channels_info(channels):
-    for idx in range(len(channels)):
+def update_channels_info(api: YoutubeAPI, channels: dict, range=None) -> dict:
+    if not range:
+        return channels
+    for idx in range:
         while True:
             try:
-                channel_data = yt_api.get_channel_by_name(channel_name=channels[idx]["name"])
+                channel_data = api.get_channel_by_name(channel_name=channels[idx]["name"])
                 channel_id = channel_data["items"][0]["id"]["channelId"]
                 channel_region_code = channel_data["regionCode"]
                 channel_name = channel_data["items"][0]["snippet"]["title"]
                 channel_description = channel_data["items"][0]["snippet"]["description"]
-                channel_thumbnail = yt_api.get_channel_thumbnail(channel_id, ThumbnailSize.MAXRES)
+                channel_thumbnail = api.get_channel_thumbnail(channel_id, ThumbnailSize.MAXRES)
                 channels[idx]["url"] = channel_id
                 channels[idx]["region_code"] = channel_region_code
                 channels[idx]["name"] = channel_name
                 channels[idx]["description"] = channel_description
                 channels[idx]["thumbnail"] = channel_thumbnail
+                category_id = channel_data["items"][0]["snippet"]["categoryId"]
+                channels[idx]["category"] = CATEGORIES[category_id]
                 time.sleep(1)
             except Exception as e:
                 logging.info(
@@ -69,15 +73,23 @@ def save_channels(country, channels, filename=None) -> None:
         json.dump([channel.__dict__ for channel in channels], f, ensure_ascii=False, indent=4)
 
 
-if __name__ == "__main__":
+def main():
+    global CATEGORIES
     top_channels_pl = scrape_top_channels("poland")
     top_channels_usa = scrape_top_channels("united-states")
 
     yt_api = YoutubeAPI()
+    CATEGORIES = yt_api.get_youtube_categories(region_code="US")
     logging.info("Updating channel information for top channels in Poland.")
-    top_channels_pl = update_channels_info(top_channels_pl)
+    top_channels_pl = update_channels_info(
+        yt_api, top_channels_pl, range=None
+    )  # zmieniajcie tutaj range, jak dacie None to nic nie zrobi i api sie nie przeciazy
     logging.info("Updating channel information for top channels in USA.")
-    top_channels_usa = update_channels_info(top_channels_usa)
+    top_channels_usa = update_channels_info(yt_api, top_channels_usa, range=range(500, 999))  # tutaj tak samo
 
     save_channels("poland", top_channels_pl, filename="top_1000_poland_updated.json")
     save_channels("usa", top_channels_usa, filename="top_1000_united-states_updated.json")
+
+
+if __name__ == "__main__":
+    main()
