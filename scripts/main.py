@@ -56,7 +56,7 @@ def update_channels_info(api: YoutubeAPI, channels: dict, range=None) -> dict:
 
 
 def load_channels(country: str):
-    logging.info(f"Loading top channels for {country}")
+    logging.info(f"Loading top channels for {country}...")
     try:
         with open(f"data/top_1000_{country}.json", "r", encoding="utf-8") as f:
             return json.load(f)
@@ -69,7 +69,7 @@ def scrape_top_channels(country: str, path=None):
     if path is None:
         path = f"data/top_1000_{country}.json"
     if not os.path.exists(path):
-        logging.info(f"Scraping top channels for {country}")
+        logging.info(f"Scraping top channels for {country}...")
         scraper = Scraper(TOP_1000_COUNTRY.format(country=country), country)
         scraper.get_top_channels(scraper.url)
         if scraper.channels and len(scraper.channels) > 0:
@@ -95,7 +95,7 @@ def save_channels(country, channels, path=None) -> None:
     if path is None:
         path = f"data/top_1000_{country}.json"
     with open(path, "w", encoding="utf-8") as f:
-        logging.info(f"Saving top channels for {country}")
+        logging.info(f"Saving top channels for {country}...")
         if not channels:
             logging.info("Error: no channels found.")
             sys.exit(1)
@@ -106,7 +106,6 @@ def save_channels(country, channels, path=None) -> None:
                 )
             except AttributeError:
                 json.dump(channels, f, ensure_ascii=False, indent=4)
-        logging.info(f"Top channels for {country} saved.")
 
 
 def main():
@@ -119,7 +118,7 @@ def main():
     yt_api = YoutubeAPI()
 
     top_channels_pl = update_channels_info(yt_api, top_channels_pl)
-    top_channels_usa = update_channels_info(yt_api, top_channels_usa, range=(699, 1000))
+    top_channels_usa = update_channels_info(yt_api, top_channels_usa, range=(997, 1000))
 
     save_channels("poland", channels=top_channels_pl, path=top_poland_path)
     save_channels("usa", top_channels_usa, path=top_usa_path)
