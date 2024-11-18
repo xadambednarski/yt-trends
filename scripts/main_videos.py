@@ -32,11 +32,11 @@ def load_videos(channel_id: str, path: str = None) -> list[dict[str, str]]:
         return []
 
 
-def save_videos(videos: list[Video], channel_id: str, path: str = None):
+def save_videos(videos: list[Video], range_channels: int, path: str = None):
     if path is None:
-        path = f"data/videos/videos_{channel_id}.json"
+        path = f"data/videos/videos_{str(range_channels[0])}-{str(range_channels[1])}.json"
     if not videos:
-        logging.info(f"No videos to save, channel: {channel_id}.")
+        logging.info(f"No videos to save, range: {str(range_channels)}")
         return
     try:
         with open(path, "w", encoding="utf-8") as f:
@@ -49,51 +49,46 @@ def save_videos(videos: list[Video], channel_id: str, path: str = None):
         return
 
 
-def get_videos(api: YoutubeAPI, channel_id: list[dict], start_time: str, end_time: str):
+def get_videos(api: YoutubeAPI, channel_id: list[dict], num_videos: int, country: str):
     videos_list = []
-    try:
-        videos = api.get_channel_videos_timerange(channel_id, start_time, end_time)
-        if not videos:
-            logging.info("No videos found.")
-            return
-
-        for video_data in videos:
-            video_id = video_data["id"]
-            title = video_data["snippet"]["title"]
-            description = video_data["snippet"]["description"]
-            category_id = video_data["snippet"]["categoryId"]
-            category = CATEGORIES.get(category_id, "Unknown")
-            thumbnail = api.get_thumbnail(video_data, ThumbnailSize.MAXRES)
-            author = video_data["snippet"]["channelTitle"]
-            stats = api.get_video_stats(video_data)
-            date = video_data["snippet"]["publishedAt"]
-            author_id = video_data["snippet"]["channelId"]
-            video = Video(
-                video_id,
-                title,
-                description,
-                category,
-                thumbnail,
-                author,
-                author_id,
-                stats["viewCount"],
-                stats["likeCount"],
-                stats["commentCount"],
-                date
-            )
-            videos_list.append(video)
-            print("Video: ", video.title)
-
-        logging.info(f"Videos retrieved for channel {author}.")
-        save_videos(videos_list, channel_id)
-        logging.info("All videos saved.")
-    except Exception as e:
-        logging.error(f"Error: {e}")
+    videos = api.get_top_videos(channel_id, num_videos)
+    if not videos:
+        logging.info("No videos found.")
         return
+
+    for video_data in videos:
+        video_id = video_data["id"]
+        title = video_data["snippet"]["title"]
+        description = video_data["snippet"]["description"]
+        category_id = video_data["snippet"]["categoryId"]
+        category = CATEGORIES.get(category_id, "Unknown")
+        thumbnail = api.get_thumbnail(video_data, ThumbnailSize.MAXRES)
+        author = video_data["snippet"]["channelTitle"]
+        stats = api.get_video_stats(video_data)
+        date = video_data["snippet"]["publishedAt"]
+        author_id = video_data["snippet"]["channelId"]
+        video = Video(
+            video_id,
+            title,
+            description,
+            category,
+            thumbnail,
+            author,
+            author_id,
+            stats["viewCount"],
+            stats["likeCount"],
+            stats["commentCount"],
+            date,
+            country
+        )
+        videos_list.append(video)
+        print("Video: ", video.title)
+    logging.info(f"Videos retrieved for channel {author}.")
+    return videos_list
 
 
 def get_videos_for_country(
-    api: YoutubeAPI, range_channels: list[int], country: str, start_time: str, end_time: str
+    api: YoutubeAPI, range_channels: list[int], country: str, num_videos: int = 50
 ):
     global CATEGORIES
     if not range_channels:
@@ -102,19 +97,23 @@ def get_videos_for_country(
     logging.info(f"Updating videos for {country}...")
     channels = load_channels(country)
     errors_num = 0
-    idx_start = range_channels[0]
+    idx_start = range_channels[0] - 1
     CATEGORIES = api.get_categories(country)
+    all_videos = []
     while idx_start < range_channels[1]:
         try:
             channel_id = channels[idx_start]["id"]
             print("Channel: ", channels[idx_start]["name"])
-            get_videos(api, channel_id, start_time, end_time)
+            channel_videos = get_videos(api, channel_id, num_videos, country)
+            if channel_videos:
+                all_videos.extend(channel_videos)
             idx_start += 1
         except Exception:
             if errors_num == 3:
                 logging.info(
                     "Error: too many errors, stopping the process. Please try again later."
                 )
+                save_videos(all_videos, country, range_channels)
                 return
             logging.info(
                 f"Error: retrieving data for channel {channels[idx_start]['name']}, retrying..."
@@ -126,10 +125,8 @@ def get_videos_for_country(
 
 def main():
     api = YoutubeAPI()
-    range_channels = [0, 1]
-    start_time = "2024-01-01T00:00:00Z"
-    end_time = "2024-02-01T00:00:00Z"
-    get_videos_for_country(api, range_channels, "united-states", start_time, end_time)
+    channels_range = [1, 1000]
+    get_videos_for_country(api, channels_range, "united-states", num_videos=50)
 
 
 if __name__ == "__main__":

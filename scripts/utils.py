@@ -15,7 +15,8 @@ class Video:
         views,
         likes,
         comments,
-        date
+        date,
+        country
     ):
         self.video_id = video_id
         self.title = title
@@ -28,6 +29,7 @@ class Video:
         self.likes = likes
         self.comments = comments
         self.date = date
+        self.country = country
 
     def __str__(self):
         return f"{self.title} - {self.author}"

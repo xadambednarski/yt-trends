@@ -126,7 +126,14 @@ class YoutubeAPI:
             type="video",
         )
         response = request.execute()
-        return response
+        video_ids = [video["id"]["videoId"] for video in response.get("items", [])]
+        if not video_ids:
+            return []
+        request = self.youtube.videos().list(
+            part="snippet,contentDetails,statistics", id=",".join(video_ids)
+        )
+        response = request.execute()
+        return response["items"]
 
     def get_channel_videos_timerange(self, channel_id: str, start_time: str, end_time: str):
         """
@@ -149,8 +156,8 @@ class YoutubeAPI:
         request = self.youtube.videos().list(
             part="snippet,contentDetails,statistics", id=",".join(video_ids)
         )
-        videos_response = request.execute()
-        return videos_response["items"]
+        response = request.execute()
+        return response["items"]
 
     def get_channel_thumbnail(
         self,
