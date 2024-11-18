@@ -55,11 +55,16 @@ def update_channels_info(api: YoutubeAPI, channels: dict, range=None) -> dict:
     return channels
 
 
-def load_channels(country: str):
+def load_channels(country: str) -> list[dict]:
     logging.info(f"Loading top channels for {country}...")
     try:
-        with open(f"data/top_1000_{country}.json", "r", encoding="utf-8") as f:
-            return json.load(f)
+        with open(f"data/channels/top_1000_{country}.json", "r", encoding="utf-8") as f:
+            content = json.load(f)
+            if not content:
+                logging.info("Error: no channels found.")
+                sys.exit(1)
+            logging.info(f"Loaded {len(content)} channels.")
+            return content
     except Exception as e:
         logging.info(f"Error: {e}")
         sys.exit(1)
@@ -67,7 +72,7 @@ def load_channels(country: str):
 
 def scrape_top_channels(country: str, path=None):
     if path is None:
-        path = f"data/top_1000_{country}.json"
+        path = f"data/channels/top_1000_{country}.json"
     if not os.path.exists(path):
         logging.info(f"Scraping top channels for {country}...")
         scraper = Scraper(TOP_1000_COUNTRY.format(country=country), country)
@@ -108,9 +113,9 @@ def save_channels(country, channels, path=None) -> None:
                 json.dump(channels, f, ensure_ascii=False, indent=4)
 
 
-def main_channels():
-    top_poland_path = "data/top_1000_poland.json"
-    top_usa_path = "data/top_1000_united-states.json"
+def main():
+    top_poland_path = "data/channels/top_1000_poland.json"
+    top_usa_path = "data/channels/top_1000_united-states.json"
 
     top_channels_pl = scrape_top_channels("poland", path=top_poland_path)
     top_channels_usa = scrape_top_channels("united-states", path=top_usa_path)
@@ -124,4 +129,4 @@ def main_channels():
 
 
 if __name__ == "__main__":
-    main_channels()
+    main()

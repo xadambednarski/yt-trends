@@ -74,43 +74,17 @@ class YoutubeAPI:
             ThumbnailSize.MEDIUM,
             ThumbnailSize.HIGH,
             ThumbnailSize.MAXRES,
-        ] = ThumbnailSize.DEFAULT,
-        getsize: bool = False,
+        ] = ThumbnailSize.DEFAULT
     ) -> Union[str, tuple[str, tuple[int, int]]]:
         """
         Retrieves the thumbnail of a video
-
-        Notes:
-        - getsize is a boolean indicating if the size of the thumbnail should be returned
 
         Returns:
         - url (str) - The URL of the thumbnail
         - size (tuple) - The size of the thumbnail (width, height)
         """
-        thumbnail = video["items"][0]["snippet"]["thumbnails"][resolution.value]
-        try:
-            size = (
-                thumbnail["width"],
-                thumbnail["height"],
-            )
-        except KeyError:
-            size = None
-        return thumbnail["url"], size if getsize else thumbnail["url"], None
-
-    def get_video_description(self, video: dict[str, Union[str, dict[str, str]]]) -> str:
-        """
-        Retrieves the description of a video
-        """
-        return video["items"][0]["snippet"]["description"]
-
-    def get_video_category(self, video: dict[str, Union[str, dict[str, str]]]) -> str:
-        """
-        Retrieves the category of a video (e.g. Music, Entertainment, etc.)
-        """
-        category_id = video["items"][0]["snippet"]["categoryId"]
-        request = self.youtube.videoCategories().list(part="snippet", id=category_id)
-        response = request.execute()
-        return response["items"][0]["snippet"]["title"]
+        thumbnail = video["snippet"]["thumbnails"][resolution.value]
+        return thumbnail["url"]
 
     def get_video_stats(self, video: dict[str, Union[str, dict[str, str]]]) -> dict[str, int]:
         """
@@ -120,8 +94,12 @@ class YoutubeAPI:
         - favoriteCount (int) - The number of times the video has been added to a user's favorites
         - commentCount (int) - The number of comments on the video
         """
-        stats = video["items"][0]["statistics"]
-        return stats
+        stats = video["statistics"]
+        return {
+            "viewCount": int(stats.get("viewCount", 0)),
+            "likeCount": int(stats.get("likeCount", 0)),
+            "commentCount": int(stats.get("commentCount", 0)),
+        }
 
     def get_top_videos(self, channel_id: str, num_videos: int = 10):
         request = self.youtube.search().list(
@@ -165,7 +143,14 @@ class YoutubeAPI:
             type="video",
         )
         response = request.execute()
-        return response
+        video_ids = [video["id"]["videoId"] for video in response.get("items", [])]
+        if not video_ids:
+            return []
+        request = self.youtube.videos().list(
+            part="snippet,contentDetails,statistics", id=",".join(video_ids)
+        )
+        videos_response = request.execute()
+        return videos_response["items"]
 
     def get_channel_thumbnail(
         self,
@@ -176,13 +161,27 @@ class YoutubeAPI:
             ThumbnailSize.MEDIUM,
             ThumbnailSize.HIGH,
             ThumbnailSize.MAXRES,
-        ] = ThumbnailSize.DEFAULT
+        ] = ThumbnailSize.DEFAULT,
     ) -> str:
         """
         Retrieves the thumbnail of a channel
         """
         thumbnail = channel["items"][0]["snippet"]["thumbnails"][resolution.value]
         return thumbnail["url"]
+
+    def get_categories(self, region: str) -> dict[str, str]:
+        """
+        Retrieves the categories of videos
+        """
+        map_region = {"united_states": "US", "poland": "PL"}
+        try:
+            region_code = map_region[region]
+        except KeyError:
+            region_code = "US"
+        request = self.youtube.videoCategories().list(part="snippet", regionCode=region_code)
+        response = request.execute()
+        categories = {item["id"]: item["snippet"]["title"] for item in response["items"]}
+        return categories
 
 
 def show_thumbnail_from_url(url: str) -> None:
