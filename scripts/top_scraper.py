@@ -2,26 +2,11 @@ import selenium
 from selenium.webdriver.common.by import By
 import selenium.webdriver
 from selenium.webdriver.chrome.options import Options
+from utils import Channel
 
 
 options = Options()
 options.add_argument("--headless")
-
-
-class Channel:
-    def __init__(
-        self,
-        name,
-        rank,
-        id=None,
-        thumbnail=None,
-        description=None,
-    ):
-        self.name = name
-        self.rank = rank
-        self.id = id
-        self.thumbnail = thumbnail
-        self.description = description
 
 
 class Scraper:
@@ -29,7 +14,7 @@ class Scraper:
         self.url = url
         self.country = country
         self.driver = selenium.webdriver.Chrome(options=options)
-        self.channels : list[Channel] = []
+        self.channels: list[Channel] = []
 
     def get_top_channels(self, url: str) -> None:
         self.driver.get(url)
