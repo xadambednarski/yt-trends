@@ -21,7 +21,6 @@ api_version = "v3"
 
 
 class ThumbnailSize(enum.Enum):
-    MAXRES = "maxres"
     HIGH = "high"
     MEDIUM = "medium"
     DEFAULT = "default"
@@ -73,7 +72,6 @@ class YoutubeAPI:
             ThumbnailSize.STANDARD,
             ThumbnailSize.MEDIUM,
             ThumbnailSize.HIGH,
-            ThumbnailSize.MAXRES,
         ] = ThumbnailSize.DEFAULT
     ) -> Union[str, tuple[str, tuple[int, int]]]:
         """
@@ -110,7 +108,14 @@ class YoutubeAPI:
             type="video",
         )
         response = request.execute()
-        return response
+        video_ids = [video["id"]["videoId"] for video in response.get("items", [])]
+        if not video_ids:
+            return []
+        request = self.youtube.videos().list(
+            part="snippet,contentDetails,statistics", id=",".join(video_ids)
+        )
+        response = request.execute()
+        return response["items"]
 
     def get_last_channel_videos(
         self, channel_id: str, num_videos: int = 10
@@ -167,7 +172,6 @@ class YoutubeAPI:
             ThumbnailSize.STANDARD,
             ThumbnailSize.MEDIUM,
             ThumbnailSize.HIGH,
-            ThumbnailSize.MAXRES,
         ] = ThumbnailSize.DEFAULT,
     ) -> str:
         """

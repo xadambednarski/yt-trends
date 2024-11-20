@@ -32,7 +32,7 @@ def load_videos(channel_id: str, path: str = None) -> list[dict[str, str]]:
         return []
 
 
-def save_videos(videos: list[Video], range_channels: int, path: str = None):
+def save_videos(videos: list[Video], range_channels: list[int], path: str = None):
     if path is None:
         path = f"data/videos/videos_{str(range_channels[0])}-{str(range_channels[1])}.json"
     if not videos:
@@ -44,6 +44,7 @@ def save_videos(videos: list[Video], range_channels: int, path: str = None):
                 json.dump([video.__dict__ for video in videos], f, ensure_ascii=False, indent=4)
             else:
                 json.dump(videos, f, ensure_ascii=False, indent=4)
+        logging.info(f"Videos saved successfully, range: {str(range_channels)}")
     except Exception as e:
         logging.error(f"Error saving videos: {e}")
         return
@@ -62,7 +63,7 @@ def get_videos(api: YoutubeAPI, channel_id: list[dict], num_videos: int, country
         description = video_data["snippet"]["description"]
         category_id = video_data["snippet"]["categoryId"]
         category = CATEGORIES.get(category_id, "Unknown")
-        thumbnail = api.get_thumbnail(video_data, ThumbnailSize.MAXRES)
+        thumbnail = api.get_thumbnail(video_data, ThumbnailSize.HIGH)
         author = video_data["snippet"]["channelTitle"]
         stats = api.get_video_stats(video_data)
         date = video_data["snippet"]["publishedAt"]
@@ -79,11 +80,10 @@ def get_videos(api: YoutubeAPI, channel_id: list[dict], num_videos: int, country
             stats["likeCount"],
             stats["commentCount"],
             date,
-            country
+            country,
         )
         videos_list.append(video)
         print("Video: ", video.title)
-    logging.info(f"Videos retrieved for channel {author}.")
     return videos_list
 
 
@@ -94,7 +94,6 @@ def get_videos_for_country(
     if not range_channels:
         logging.info("No channels to update.")
         return
-    logging.info(f"Updating videos for {country}...")
     channels = load_channels(country)
     errors_num = 0
     idx_start = range_channels[0] - 1
@@ -108,24 +107,31 @@ def get_videos_for_country(
             if channel_videos:
                 all_videos.extend(channel_videos)
             idx_start += 1
-        except Exception:
+        except Exception as e:
             if errors_num == 3:
                 logging.info(
                     "Error: too many errors, stopping the process. Please try again later."
                 )
-                save_videos(all_videos, country, range_channels)
+                save_videos(
+                    all_videos,
+                    range_channels,
+                    path=f"data/videos/videos_{str(range_channels)}_{country}.json",
+                )
                 return
             logging.info(
-                f"Error: retrieving data for channel {channels[idx_start]['name']}, retrying..."
+                f"Error: retrieving data for channel {channels[idx_start]['name']}: {e}, retrying.."
             )
             time.sleep(3)
             errors_num += 1
             continue
+    save_videos(
+        all_videos, range_channels, path=f"data/videos/videos_{str(range_channels)}_{country}.json"
+    )
 
 
 def main():
     api = YoutubeAPI()
-    channels_range = [1, 1000]
+    channels_range = [394, 492]  # max batch size for one api key equals 98
     get_videos_for_country(api, channels_range, "united-states", num_videos=50)
 
 
