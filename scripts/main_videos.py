@@ -131,7 +131,7 @@ def get_videos_for_country(
 
 def main():
     api = YoutubeAPI()
-    channels_range = [394, 492]  # max batch size for one api key equals 98
+    channels_range = [986, 1000]  # max batch size for one api key equals 98
     get_videos_for_country(api, channels_range, "united-states", num_videos=50)
 
 
