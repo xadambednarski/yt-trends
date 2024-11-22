@@ -7,6 +7,7 @@ import requests
 import enum
 from matplotlib import pyplot as plt
 from PIL import Image
+import sys
 from io import BytesIO
 
 
@@ -55,7 +56,8 @@ class YoutubeAPI:
         """
         self.current_config_index += 1
         if self.current_config_index >= len(self.config_files):
-            raise Exception("No more API credentials available.")
+            print("No more API credentials available. Exiting...")
+            sys.exit(1)
         self.youtube = self._initialize_api()
 
     def _execute_request(self, request):

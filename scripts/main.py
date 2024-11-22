@@ -1,5 +1,6 @@
 import json
 import logging
+import sys
 import os
 from typing import Optional, List, Dict
 from dataclasses import dataclass
@@ -103,7 +104,7 @@ def update_channels(
         except Exception as e:
             if "No more API credentials available." in str(e):
                 logging.error("No more API credentials available. Exiting...")
-                raise SystemExit(1)
+                sys.exit(1)
             logging.error(f"Error updating channel {channels[idx]['name']}: {e}")
     return channels
 
