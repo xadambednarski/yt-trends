@@ -104,7 +104,7 @@ def update_channels(
         except Exception as e:
             if "No more API credentials available." in str(e):
                 logging.error("No more API credentials available. Exiting...")
-                sys.exit(1)
+                break
             logging.error(f"Error updating channel {channels[idx]['name']}: {e}")
     return channels
 

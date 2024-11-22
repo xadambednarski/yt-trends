@@ -57,7 +57,6 @@ class YoutubeAPI:
         self.current_config_index += 1
         if self.current_config_index >= len(self.config_files):
             print("No more API credentials available. Exiting...")
-            sys.exit(1)
         self.youtube = self._initialize_api()
 
     def _execute_request(self, request):
